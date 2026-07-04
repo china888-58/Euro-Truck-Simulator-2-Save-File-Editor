@@ -1,13 +1,20 @@
-# 个人游戏存档(含敏感数据,不应入库)
-game.sii
-*.sii.bak
-*.bak.sii
-game.bak.*
-
-# Python 缓存
-__pycache__/
+# Python 源码（本仓库只发布 EXE，不公开源码）
+*.py
 *.pyc
 *.pyo
+__pycache__/
+
+# 构建中间产物
+build/
+dist/
+*.spec
+*.bak.sii
+*.sii.bak
+game.sii
+game.bak.*
+*.bat
+EuroTruckSaveEditor-all.zip
+EuroTruckSaveEditor(Linux-ELF)
 
 # 编辑器/系统临时文件
 *.swp
