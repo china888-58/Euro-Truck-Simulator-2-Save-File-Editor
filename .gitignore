@@ -22,3 +22,6 @@ EuroTruckSaveEditor(Linux-ELF)
 *~
 .DS_Store
 Thumbs.db
+
+# EXE 发布到 Release，不进仓库
+*.exe
