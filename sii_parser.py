@@ -54,6 +54,11 @@ PROP_RE = re.compile(
     r"^([\t ]*)([A-Za-z_][\w\[\]]*)\s*:\s*(.+?)\s*$"
 )
 
+# 文本 SII 的 hex 浮点数：& + 8 位 hex (大端 float32)
+# 如 &3a041ef4, &00000000, &3f800000
+# 用于区分浮点数和单元引用(&_nameless.X)
+_HEX_FLOAT_RE = re.compile(r"^&[0-9a-fA-F]{8}$")
+
 # 嵌套类型属性行（如 truck : _nameless.xxx { ... }）已由 UNIT_DECL_RE 捕获
 
 
@@ -460,7 +465,11 @@ class SiiFile:
                 continue
             indent, name, value = m.group(1), m.group(2), m.group(3)
             # 跳过嵌套单元声明（如 "truck: _nameless.X { ..."）
-            if value.endswith("{") or value.startswith("&"):
+            if value.endswith("{"):
+                continue
+            # 跳过单元引用(如 &_nameless.238.ad84.aa00)
+            # 但保留 hex 浮点数(如 &3a041ef4,是文本 SII 的 float32 表示)
+            if value.startswith("&") and not _HEX_FLOAT_RE.match(value):
                 continue
             unit.properties[name] = (i, indent, value)
 
@@ -545,6 +554,77 @@ class SiiFile:
         u.properties[prop] = (line_idx, indent, formatted)
         self._dirty = True
         return True
+
+    def set_array_elements(self, instance: str, base_name: str, values) -> bool:
+        """整体替换一个数组字段的所有元素。
+
+        用于 wheels_wear / wheels_wear_unfixable 这类每个轮子单独磨损的字段。
+        - 文本格式: 改写 base_name[N] 各行,并把 base_name 的 count 同步更新
+        - BSII 格式: 直接替换 field_values[base_name] = list(values)
+          (bsii_parser 数组在 field_values 里就是 list,可整体替换)
+
+        values 长度必须等于现有数组长度(不可变长)。
+        返回是否至少修改了一个元素。
+        """
+        n = len(values)
+        u = self.units.get(instance)
+        if u is None:
+            return False
+        # BSII 格式: 整体替换 list
+        if self._bsii is not None:
+            db = self._bsii.get_unit(instance)
+            if db is None or base_name not in db.field_values:
+                return False
+            old_arr = db.field_values[base_name]
+            if not isinstance(old_arr, list) or len(old_arr) != n:
+                return False
+            new_arr = list(values)
+            db.field_values[base_name] = new_arr
+            # field_raw 只存 count,无需改(数组长度未变)
+            self._dirty = True
+            self._bsii._dirty = True
+            return True
+        # 文本格式: 改写 base_name[i] 各行
+        changed = 0
+        for i, v in enumerate(values):
+            key = f"{base_name}[{i}]"
+            if key not in u.properties:
+                continue
+            line_idx, indent, old = u.properties[key]
+            formatted = self._format_value(v, old)
+            new_line = f"{indent}{key}: {formatted}\n"
+            old_line = self._lines[line_idx]
+            if old_line.endswith("\r\n"):
+                new_line = new_line.rstrip("\n") + "\r\n"
+            self._lines[line_idx] = new_line
+            u.properties[key] = (line_idx, indent, formatted)
+            changed += 1
+        if changed > 0:
+            self._dirty = True
+        return changed > 0
+
+    def get_array_elements(self, instance: str, base_name: str):
+        """读取一个数组字段的所有元素,返回 list。无法读取时返回空 list。"""
+        u = self.units.get(instance)
+        if u is None:
+            return []
+        # BSII 格式
+        if self._bsii is not None:
+            db = self._bsii.get_unit(instance)
+            if db is None:
+                return []
+            arr = db.field_values.get(base_name)
+            return list(arr) if isinstance(arr, list) else []
+        # 文本格式: 收集 base_name[0], base_name[1], ...
+        result = []
+        i = 0
+        while True:
+            key = f"{base_name}[{i}]"
+            if key not in u.properties:
+                break
+            result.append(u.properties[key][2])
+            i += 1
+        return result
 
     @staticmethod
     def _format_value(value, old_text: str) -> str:

@@ -1,6 +1,8 @@
 # 个人游戏存档(含敏感数据,不应入库)
 game.sii
 *.sii.bak
+*.bak.sii
+game.bak.*
 
 # Python 缓存
 __pycache__/

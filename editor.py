@@ -709,6 +709,7 @@ class SaveEditor:
         """将卡车全部磨损部件归零（等效于全修）。
 
         支持 ETS2 1.6 BSII 的 xxx_wear 字段名(后缀)和旧版的 wear_xxx (前缀)。
+        wheels_wear 是数组字段(每个轮子单独磨损),会清零所有 wheels_wear[i]。
         """
         truck = self.get_player_truck()
         if truck is None:
@@ -723,6 +724,17 @@ class SaveEditor:
             ok = False
             for p in aliases:
                 if p in truck.properties:
+                    # wheels_wear 是数组字段,需整体替换所有元素
+                    if prop == "wear_wheels":
+                        arr = self.sii.get_array_elements(
+                            truck.instance_name, p)
+                        if arr:
+                            n = len(arr)
+                            if self.sii.set_array_elements(
+                                truck.instance_name, p, [0.0] * n):
+                                changed += 1
+                                ok = True
+                                break
                     if self.sii.set_property(truck.instance_name, p, 0.0):
                         changed += 1
                         ok = True
@@ -800,6 +812,21 @@ class SaveEditor:
                         # 标记 fuel_relative
                         if key == "fuel" and p == "fuel_relative":
                             info["fuel_is_relative"] = True
+                        # wheels_wear 是数组字段(每个轮子单独磨损值),
+                        # 字段值是数组长度,真实磨损值在 wheels_wear[0..N]
+                        if key == "wear_wheels":
+                            arr = self.sii.get_array_elements(
+                                truck.instance_name, p)
+                            if arr:
+                                vals = []
+                                for raw in arr:
+                                    try:
+                                        vals.append(self._parse_hex_float(raw))
+                                    except (ValueError, TypeError):
+                                        pass
+                                if vals:
+                                    info[key] = max(vals)
+                                    break
                         try:
                             # OrdinalString 字段值带双引号,先 strip
                             raw = truck.properties[p][2].strip().strip('"').strip()
@@ -872,6 +899,21 @@ class SaveEditor:
         # 去掉 |country 后缀
         cleaned = cleaned.split("|", 1)[0]
         return cleaned.strip()
+
+    @staticmethod
+    def _parse_hex_float(raw):
+        """解析 SII 文本格式里的 hex 浮点数(如 '&3a041ef4')。
+
+        ETS2 文本存档里 float 字段以 '&'+8 位 hex 表示,大端 float32。
+        BSII 格式下此函数不会被调用(数组元素已经是 float)。
+        """
+        import struct
+        s = str(raw).strip()
+        if s.startswith("&"):
+            s = s[1:]
+        # 取前 8 位 hex(若更长截断)
+        s = s[:8].ljust(8, "0")
+        return struct.unpack(">f", bytes.fromhex(s))[0]
 
     # ============================================================
     # 地图 / 城市 / 公司
@@ -1071,6 +1113,7 @@ class SaveEditor:
                 self.player_unit_name)
         # 永久磨损字段名(后缀形式): xxx_wear_unfixable
         # 旧版可能用前缀: wear_xxx_unfixable
+        # wheels_wear_unfixable 是数组字段(每轮单独),需整体替换
         targets = []
         for prop, cn in TRUCK_WEAR_PROPS:
             # 后缀形式 (ETS2 1.6 BSII)
@@ -1082,6 +1125,14 @@ class SaveEditor:
         skipped = 0
         for p in targets:
             if p in truck.properties:
+                # 数组字段(如 wheels_wear_unfixable): 整体清零所有元素
+                arr = self.sii.get_array_elements(truck.instance_name, p)
+                if arr:
+                    n = len(arr)
+                    if self.sii.set_array_elements(
+                        truck.instance_name, p, [0.0] * n):
+                        changed += 1
+                    continue
                 if self.sii.set_property(truck.instance_name, p, 0.0):
                     changed += 1
             else:
@@ -1118,6 +1169,15 @@ class SaveEditor:
             ok_any = False
             for p in wear_props:
                 if p in t.properties:
+                    # wheels_wear / wheels_wear_unfixable 是数组字段
+                    arr = self.sii.get_array_elements(t.instance_name, p)
+                    if arr:
+                        n = len(arr)
+                        if self.sii.set_array_elements(
+                            t.instance_name, p, [0.0] * n):
+                            changed_fields += 1
+                            ok_any = True
+                        continue
                     if self.sii.set_property(t.instance_name, p, 0.0):
                         changed_fields += 1
                         ok_any = True
