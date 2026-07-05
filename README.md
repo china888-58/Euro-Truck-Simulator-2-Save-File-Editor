@@ -2,7 +2,7 @@
 
 > **Euro Truck Simulator 2** 与 **American Truck Simulator** 存档编辑工具
 
-一键修改金钱、经验、技能、卡车、车库、AI 司机等，支持所有存档格式（含 ETS2 1.6 BSII + ScsC 加密）。
+一键修改金钱、经验、技能、卡车、车库、AI 司机等。
 
 ## 下载
 
