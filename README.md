@@ -6,7 +6,7 @@
 
 ## 下载
 
-从 [GitHub Release](https://github.com/china888-58/Euro-Truck-Simulator-2-Save-File-Editor/releases/latest) 下载 **`EuroTruckSaveEditor.zip`**（约 50 MB），解压后双击 `EuroTruckSaveEditor.exe` 运行。
+从 [GitHub Release](https://github.com/china888-58/Euro-Truck-Simulator-2-Save-File-Editor/releases/latest) 下载 
 
 
 
