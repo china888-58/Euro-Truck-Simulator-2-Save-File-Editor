@@ -8,7 +8,7 @@
 
 从 [GitHub Release](https://github.com/china888-58/Euro-Truck-Simulator-2-Save-File-Editor/releases/latest) 下载 **`EuroTruckSaveEditor.zip`**（约 50 MB），解压后双击 `EuroTruckSaveEditor.exe` 运行。
 
-> **重要**:本工具采用 onedir 目录模式打包,必须下载完整 zip 包解压后运行,**不要单独下载 .exe 文件**(会因缺少 DLL 报错 "Failed to load Python DLL")。
+
 
 > 系统要求:Windows 10 / 11(64 位)。首次运行若被 SmartScreen 拦截,点击「更多信息」→「仍要运行」。
 
