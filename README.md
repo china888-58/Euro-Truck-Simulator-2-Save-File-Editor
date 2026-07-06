@@ -2,8 +2,6 @@
 
 > **Euro Truck Simulator 2** 与 **American Truck Simulator** 存档编辑工具
 
-一键修改金钱、经验、技能、卡车、车库、AI 司机等。
-
 ## 下载
 
 从 [GitHub Release](https://github.com/china888-58/Euro-Truck-Simulator-2-Save-File-Editor/releases/latest) 下载 
