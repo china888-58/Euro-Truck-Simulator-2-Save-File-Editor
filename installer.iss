@@ -1,11 +1,11 @@
 ; EuroTruckSaveEditor Inno Setup 安装脚本
 ; 用法: ISCC.exe installer.iss
-; 输出: dist\EuroTruckSaveEditor-Setup-v3.0.1.exe
+; 输出: dist\EuroTruckSaveEditor-Setup-v3.0.2.exe
 
 #define MyAppName "欧卡 / 美卡 存档编辑器"
 #define MyAppNameEN "EuroTruckSaveEditor"
 #define MyAppGroupName "欧卡存档编辑器"
-#define MyAppVersion "3.0.1"
+#define MyAppVersion "3.0.2"
 #define MyAppPublisher "Eurocard-Tools"
 #define MyAppURL "https://github.com/china888-58/Euro-Truck-Simulator-2-Save-File-Editor"
 #define MyAppExeName "EuroTruckSaveEditor.exe"
